@@ -1,8 +1,5 @@
-import {Governor} from './Governor.ts';
-
+import Governor from './Governor'
 declare var module: any;
-
-// TODO: Those clever skeleton guys had a cool init function here...
 
 // This shouldn't have to be referenced after this.
 // Place all logic changes in the governor.

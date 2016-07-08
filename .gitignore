@@ -1,3 +1,4 @@
 .env
+.tscache/
 node_modules/
 dist/
