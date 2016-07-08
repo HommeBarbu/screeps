@@ -1,0 +1,22 @@
+{
+  "name": "screeps-ts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+    "scripts": {
+    "postinstall": "./node_modules/.bin/tsd install"
+  },
+  "dependencies": {
+    "grunt-screeps": "^1.2.1",
+    "grunt-ts": "^5.5.1",
+    "screeps-typescript-declarations": "^4.0.2"
+  },
+  "devDependencies": {
+    "grunt-contrib-watch": "^1.0.0"
+  },
+  "scripts": {
+    "test": "tap test/*.js"
+  },
+  "author": "",
+  "license": "ISC"
+}

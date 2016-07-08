@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "target": "ES5",
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "outFile": "./dist/main.js",
+        "sourceRoot": "./src/",
+        "rootDir": "./src/",
+        "sourceMap": true
+    },
+    "files": [
+        "./src/Governor.ts",
+        "./src/Main.ts"
+    ]
+}
