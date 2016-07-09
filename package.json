@@ -6,6 +6,7 @@
     "postinstall": "typings install"
   },
   "dependencies": {
+    "dotenv": "^2.0.0",
     "grunt-screeps": "^1.2.1",
     "grunt-ts": "^5.5.1",
     "screeps-typescript-declarations": "^4.0.2"
