@@ -11,6 +11,7 @@
     "files": [
         "./src/Governor.ts",
         "./src/Main.ts",
-        "./node_modules/screeps-typescript-declarations/dist/screeps.d.ts"
+        "./node_modules/screeps-typescript-declarations/dist/screeps.d.ts",
+        "./typings/index.d.ts"
     ]
 }
