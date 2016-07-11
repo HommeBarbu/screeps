@@ -12,7 +12,6 @@ export default class Governor {
         for (let spawnName in spawns) {
             spawnNames.push(spawnName);
         }
-        console.log(spawnNames[0]);
         let initialSpawn = <Spawn>spawns[spawnNames[0]];
 
         let roadSource = initialSpawn;
@@ -50,7 +49,6 @@ export default class Governor {
         for (let spawnName in spawns) {
             spawnNames.push(spawnName);
         }
-        console.log(spawnNames[0]);
         let initialSpawn = <Spawn>spawns[spawnNames[0]];
 
         let body: string[] = [MOVE, MOVE, CARRY, WORK];
@@ -63,7 +61,6 @@ export default class Governor {
         }
 
         let name: string = null;
-        console.log(initialSpawn);
         if (harvesterCount <= 3) {
             console.log(initialSpawn.createCreep(body, name, harvesterProperties));
         }
@@ -85,7 +82,6 @@ class Harvester implements BaseCreep {
 
     harvest() {
         if (this.creep.carry.energy < this.creep.carryCapacity) {
-            console.log("Harvest");
             let source = <Source>this.creep.room.find(FIND_SOURCES_ACTIVE)[0];
             //let source = (Source) sources[0];
             if (this.creep.harvest(source) == ERR_NOT_IN_RANGE) {
@@ -97,10 +93,8 @@ class Harvester implements BaseCreep {
                     return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN)
                 }
             });
-            console.log(targets);
             if (targets.length > 0) {
                 let target = <Structure>targets[0];
-                console.log("Return");
                 if (this.creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                     this.creep.moveTo(target);
                 }
@@ -117,11 +111,9 @@ class Upgrader implements BaseCreep {
 
     upgrade() {
             if (this.creep.memory.upgrading && this.creep.carry.energy == 0) {
-                console.log("Done upgrading.");
                 this.creep.memory.upgrading = false;
             }
             if (!this.creep.memory.upgrading && this.creep.carry.energy == this.creep.carryCapacity) {
-                console.log("Start upgrading.");
                 this.creep.memory.upgrading = true;
             }
 
@@ -168,7 +160,6 @@ class RoadBuilder {
     buildBetweenSpawnAndSource(source: Spawn, dest: Source){
         var path = source.room.findPath(source.pos, dest.pos);
         for (var coord in path){
-            console.log("Creating road, I promise.")
             let x = coord['x']
             let y = coord['y']
             source.room.createConstructionSite(x, y, STRUCTURE_ROAD);
