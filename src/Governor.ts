@@ -4,7 +4,6 @@ export default class Governor {
     bootstrap(){
         console.log('init');
         this.init = true;
-        let roadBuilder = new RoadBuilder();
 
         // Oh god this is hackey, fix this.
         let spawnNames = [];
@@ -12,14 +11,6 @@ export default class Governor {
         for (let spawnName in spawns) {
             spawnNames.push(spawnName);
         }
-        let initialSpawn = <Spawn>spawns[spawnNames[0]];
-
-        let roadSource = initialSpawn;
-        let roadDest = <Source> initialSpawn.room.find(FIND_SOURCES_ACTIVE)[0];
-
-        // Build roads
-        let roadbuilder = new RoadBuilder();
-        roadbuilder.buildBetweenSpawnAndSource(roadSource, roadDest);
     }
 
     govern() {
@@ -30,6 +21,8 @@ export default class Governor {
 
         let harvesterCount = 0;
         let upgraderCount = 0;
+        let builderCount = 0;
+        let repairerCount = 0;
         for (let name in creeps) {
             let creep = creeps[name];
             if (creep.memory.role == "harvester") {
@@ -42,6 +35,16 @@ export default class Governor {
                 let upgrader = new Upgrader(creep);
                 upgrader.upgrade();
             }
+            if (creep.memory.role == "builder") {
+                builderCount = builderCount + 1;
+                let builder = new Builder(creep);
+                builder.build();
+            }
+            if (creep.memory.role == "repairer") {
+                repairerCount = repairerCount + 1;
+                let repairer = new Repairer(creep);
+                repairer.repair();
+            }
         }
 
         let spawnNames = [];
@@ -49,7 +52,7 @@ export default class Governor {
         for (let spawnName in spawns) {
             spawnNames.push(spawnName);
         }
-        let initialSpawn = <Spawn>spawns[spawnNames[0]];
+        let initialSpawn = <Spawn> spawns[spawnNames[0]];
 
         let body: string[] = [MOVE, MOVE, CARRY, WORK];
         let harvesterProperties: any = {
@@ -59,13 +62,27 @@ export default class Governor {
             role: 'upgrader',
             upgrading: false
         }
+        let builderProperties: any = {
+            role: 'builder',
+            building: false
+        }
+        let repairerProperties: any = {
+            role: 'repairer',
+            repairing: false
+        }
 
         let name: string = null;
-        if (harvesterCount <= 3) {
+        if (harvesterCount <= 2) {
             console.log(initialSpawn.createCreep(body, name, harvesterProperties));
         }
-        if (upgraderCount <= 2) {
+        if (upgraderCount <= 3) {
             console.log(initialSpawn.createCreep(body, name, upgraderProperties));
+        }
+        if (builderCount <= 4) {
+            console.log(initialSpawn.createCreep(body, name, builderProperties));
+        }
+        if (repairerCount <= 1) {
+            console.log(initialSpawn.createCreep(body, name, repairerProperties));
         }
     }
 }
@@ -81,6 +98,7 @@ class Harvester implements BaseCreep {
     }
 
     harvest() {
+        // Go to the source and fill up
         if (this.creep.carry.energy < this.creep.carryCapacity) {
             let source = <Source>this.creep.room.find(FIND_SOURCES_ACTIVE)[0];
             //let source = (Source) sources[0];
@@ -88,19 +106,87 @@ class Harvester implements BaseCreep {
                 this.creep.moveTo(source);
             }
         } else {
+            // Otherwise, go fill up an extension or a spawn.
             let targets = this.creep.room.find(FIND_STRUCTURES, {
                 filter: (structure) => {
                     return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN)
                 }
             });
+
             if (targets.length > 0) {
-                let target = <Structure>targets[0];
+                let target = <Structure> targets[0];
                 if (this.creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                     this.creep.moveTo(target);
                 }
             }
         }
     }
+}
+
+class Builder implements BaseCreep {
+  creep: Creep
+    constructor(creep: Creep) {
+        this.creep = creep
+    }
+
+    build() {
+            if (this.creep.memory.building && this.creep.carry.energy == 0) {
+                this.creep.memory.building = false;
+            }
+            if (!this.creep.memory.building && this.creep.carry.energy == this.creep.carryCapacity) {
+                this.creep.memory.building = true;
+            }
+
+            if (this.creep.memory.building) {
+                let buildSites = this.creep.room.find(FIND_CONSTRUCTION_SITES);
+                if (buildSites.length){
+                    let closestSite = <ConstructionSite> buildSites[0];
+                    if (this.creep.build(closestSite) == ERR_NOT_IN_RANGE) {
+                        this.creep.moveTo(closestSite);
+                    }
+                }
+                
+
+            } else {
+                let source = <Source> this.creep.room.find(FIND_SOURCES_ACTIVE)[0];
+                if (this.creep.harvest(source) == ERR_NOT_IN_RANGE) {
+                    this.creep.moveTo(source);
+                }
+            }
+        }
+}
+
+class Repairer implements BaseCreep {
+  creep: Creep
+    constructor(creep: Creep) {
+        this.creep = creep
+    }
+
+    repair() {
+            if (this.creep.memory.repairing && this.creep.carry.energy == 0) {
+                this.creep.memory.repairing = false;
+            }
+            if (!this.creep.memory.repairing && this.creep.carry.energy == this.creep.carryCapacity) {
+                this.creep.memory.repairing = true;
+            }
+
+            if (this.creep.memory.repairing) {
+                let roadToRepair = <Structure> this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                    filter: function(object){
+                        return object.structureType === STRUCTURE_ROAD && (object.hits > object.hitsMax / 3);
+                    } 
+                });
+                if (this.creep.repair(roadToRepair) == ERR_NOT_IN_RANGE) {
+                    this.creep.moveTo(roadToRepair);
+                }
+
+            } else {
+                let source = <Source> this.creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE)[0];
+                if (this.creep.harvest(source) == ERR_NOT_IN_RANGE) {
+                    this.creep.moveTo(source);
+                }
+            }
+        }
 }
 
 class Upgrader implements BaseCreep {
@@ -153,17 +239,5 @@ class Janitor {
                 delete Memory.spawns[name];
             }
         }
-    }
-}
-
-class RoadBuilder {
-    buildBetweenSpawnAndSource(source: Spawn, dest: Source){
-        var path = source.room.findPath(source.pos, dest.pos);
-        for (var coord in path){
-            let x = coord['x']
-            let y = coord['y']
-            source.room.createConstructionSite(x, y, STRUCTURE_ROAD);
-        }
-
     }
 }

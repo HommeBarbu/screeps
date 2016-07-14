@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 
 // The sole point of this class is to act as an array of RoomInfo, is that okay?
-export default class RoomManager{
+export default class RoomCollection{
     rooms: RoomInfo[];
     cachedRooms: Room[];
     constructor(){
@@ -12,8 +12,10 @@ export default class RoomManager{
 
     update(){
         console.log('Update room manager');
+        // Throw new rooms in an array
         for (let name in Game.rooms){
             if (!_.includes(this.cachedRooms, Game.rooms[name])){
+                console.log("new room!");
                 this.cachedRooms.push(Game.rooms[name]);
                 this.rooms.push(new RoomInfo(Game.rooms[name]));
             }
@@ -25,15 +27,19 @@ export default class RoomManager{
             let roomInfo = <RoomInfo> this.rooms[room];
             roomInfo.update();
 
-            console.log('Building Road');
+            // Build roads to sources
             for (let pathName in roomInfo.spawnSourcePath){
-                console.log(roomInfo.roomControllerSourcePath[pathName]);
-                console.log(roomInfo.roomControllerSourcePath[pathName].length);
-                let path = roomInfo.roomControllerSourcePath[pathName].path;
-                console.log(path.length);
-                for (let coordName in path){
-                    let coord = <RoomPosition> path[coordName];
-                    console.log(coord.createConstructionSite(STRUCTURE_ROAD));
+                let path = roomInfo.spawnSourcePath[pathName];
+                for (let roomPos in path.path){
+                    path.path[roomPos].createConstructionSite(STRUCTURE_ROAD);
+                }
+            }
+
+            // Build roads to Room Controller
+            for (let pathName in roomInfo.roomControllerSourcePath){
+                let path = roomInfo.roomControllerSourcePath[pathName];
+                for (let roomPos in path.path){
+                    path.path[roomPos].createConstructionSite(STRUCTURE_ROAD);
                 }
             }
         }
@@ -50,16 +56,15 @@ class RoomInfo{
     spawn: Spawn;
     controller: Controller;
     sources: Source[];
-    spawnSourcePath: [property: string] = RoomPosition[];
-    roomControllerSourcePath: {property: string} = RoomPosition[];;
+    spawnSourcePath: Path[];
+    roomControllerSourcePath: Path[];
 
     constructor(room: Room){
         this.room = room;
         this.sources = [];
-        this.spawnSourcePath = {};
-        this.roomControllerSourcePath = {path: Path};
+        this.spawnSourcePath = [];
+        this.roomControllerSourcePath = [];
         this.update();
-
     }
 
     update() {
@@ -80,12 +85,20 @@ class RoomInfo{
         // Get sources
         for (let activeSource of this.room.find(FIND_SOURCES_ACTIVE)){
             let source = <Source> activeSource;
-            this.sources.push(source);
+            if (!_.includes(this.sources, source)){
+                this.sources.push(source);
+            }
 
             // Build paths
             let id = source.id;
-            this.spawnSourcePath[id] = new Path(this.spawn, source);
-            this.roomControllerSourcePath[id] = new Path(this.spawn, source);
+            console.log('ssp', !(id in this.spawnSourcePath));
+            console.log('rcsp', !(id in this.roomControllerSourcePath));
+            if (!(id in this.spawnSourcePath)){
+                this.spawnSourcePath[id] = new Path(this.spawn, source);
+            }
+            if (!(id in this.roomControllerSourcePath)){
+                this.roomControllerSourcePath[id] = new Path(this.controller, source);
+            }
         }
     }
 }
@@ -98,24 +111,32 @@ class Path{
     constructor(start, end){
         console.log("creating path");
         if (start instanceof Spawn){
+            console.log("Starts at spawn");
             let spawn = <Spawn> start;
             this.start = start.pos;
         }
-        if (start instanceof Structure){
+        else if (start instanceof Structure){
+            console.log("Starts at structure");
             let structure = <Structure> start;
             this.start = structure.pos;
         }
+
         if (end instanceof Spawn){
+            console.log("Ends at spawn");
             let spawn = <Spawn> end;
             this.end = end.pos;
         }
-        if (end instanceof Structure){
+        else if (end instanceof Structure){
+            console.log("Ends at structure");
             let spawn = <Structure> end;
+            this.end = end.pos;
+        }else{
+            console.log("BOLD: Ends at source");
+            let spawn = <Spawn> end;
             this.end = end.pos;
         }
 
         let path = PathFinder.search(this.start, this.end);
         this.path = path.path;
-        console.log('path', this.path);
     }
 }
