@@ -28,21 +28,25 @@ export default class Governor {
             if (creep.memory.role == "harvester") {
                 harvesterCount = harvesterCount + 1;
                 let harvester = new Harvester(creep);
+                console.log('Harvest.');
                 harvester.harvest();
             }
             if (creep.memory.role == "upgrader") {
                 upgraderCount = upgraderCount + 1;
                 let upgrader = new Upgrader(creep);
+                console.log('Upgrade.');
                 upgrader.upgrade();
             }
             if (creep.memory.role == "builder") {
                 builderCount = builderCount + 1;
                 let builder = new Builder(creep);
+                console.log('Build.');
                 builder.build();
             }
             if (creep.memory.role == "repairer") {
                 repairerCount = repairerCount + 1;
                 let repairer = new Repairer(creep);
+                console.log('Repair.');
                 repairer.repair();
             }
         }
@@ -73,15 +77,19 @@ export default class Governor {
 
         let name: string = null;
         if (harvesterCount <= 2) {
+            console.log('Create Harvester');
             console.log(initialSpawn.createCreep(body, name, harvesterProperties));
         }
-        if (upgraderCount <= 3) {
+        else if (upgraderCount <= 3) {
+            console.log('Create Upgrader');
             console.log(initialSpawn.createCreep(body, name, upgraderProperties));
         }
-        if (builderCount <= 4) {
+        else if (builderCount <= 4) {
+            console.log('Create Builder');
             console.log(initialSpawn.createCreep(body, name, builderProperties));
         }
-        if (repairerCount <= 1) {
+        else if (repairerCount <= 2) {
+            console.log('Create Repairer');
             console.log(initialSpawn.createCreep(body, name, repairerProperties));
         }
     }
@@ -115,7 +123,10 @@ class Harvester implements BaseCreep {
 
             if (targets.length > 0) {
                 let target = <Structure> targets[0];
+                // TODO this could be prettier...
                 if (this.creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    this.creep.moveTo(target);
+                }else{
                     this.creep.moveTo(target);
                 }
             }
@@ -144,8 +155,20 @@ class Builder implements BaseCreep {
                     if (this.creep.build(closestSite) == ERR_NOT_IN_RANGE) {
                         this.creep.moveTo(closestSite);
                     }
+                }else{
+                    // Move to spawn
+                    let targets = this.creep.room.find(FIND_STRUCTURES, {
+                        filter: (structure) => {
+                            return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN)
+                        }
+                    });
+
+                    if (targets.length > 0) {
+                        let target = <Structure> targets[0];
+                        this.creep.moveTo(target);
+                    }
                 }
-                
+
 
             } else {
                 let source = <Source> this.creep.room.find(FIND_SOURCES_ACTIVE)[0];
@@ -176,8 +199,22 @@ class Repairer implements BaseCreep {
                         return object.structureType === STRUCTURE_ROAD && (object.hits > object.hitsMax / 3);
                     } 
                 });
-                if (this.creep.repair(roadToRepair) == ERR_NOT_IN_RANGE) {
-                    this.creep.moveTo(roadToRepair);
+                if (roadToRepair){
+                    if (this.creep.repair(roadToRepair) == ERR_NOT_IN_RANGE) {
+                        this.creep.moveTo(roadToRepair);
+                    }
+                }else{
+                                        // Move to spawn
+                    let targets = this.creep.room.find(FIND_STRUCTURES, {
+                        filter: (structure) => {
+                            return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN)
+                        }
+                    });
+
+                    if (targets.length > 0) {
+                        let target = <Structure> targets[0];
+                        this.creep.moveTo(target);
+                    }
                 }
 
             } else {

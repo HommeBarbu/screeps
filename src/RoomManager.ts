@@ -30,16 +30,26 @@ export default class RoomCollection{
             // Build roads to sources
             for (let pathName in roomInfo.spawnSourcePath){
                 let path = roomInfo.spawnSourcePath[pathName];
-                for (let roomPos in path.path){
-                    path.path[roomPos].createConstructionSite(STRUCTURE_ROAD);
+                for (let roomPosName in path.path){
+                    let roomPos = path.path[roomPosName];
+                    roomInfo.room.createConstructionSite(roomPos.x, roomPos.y, STRUCTURE_ROAD);
+                    roomInfo.room.createConstructionSite(roomPos.x+1, roomPos.y+1, STRUCTURE_ROAD);
+                    roomInfo.room.createConstructionSite(roomPos.x-1, roomPos.y-1, STRUCTURE_ROAD);
+                    roomInfo.room.createConstructionSite(roomPos.x-1, roomPos.y+1, STRUCTURE_ROAD);
+                    roomInfo.room.createConstructionSite(roomPos.x+1, roomPos.y-1, STRUCTURE_ROAD);
                 }
             }
 
             // Build roads to Room Controller
             for (let pathName in roomInfo.roomControllerSourcePath){
                 let path = roomInfo.roomControllerSourcePath[pathName];
-                for (let roomPos in path.path){
-                    path.path[roomPos].createConstructionSite(STRUCTURE_ROAD);
+                for (let roomPosName in path.path){
+                    let roomPos = path.path[roomPosName];
+                    roomInfo.room.createConstructionSite(roomPos.x, roomPos.y, STRUCTURE_ROAD);
+                    roomInfo.room.createConstructionSite(roomPos.x+1, roomPos.y+1, STRUCTURE_ROAD);
+                    roomInfo.room.createConstructionSite(roomPos.x-1, roomPos.y-1, STRUCTURE_ROAD);
+                    roomInfo.room.createConstructionSite(roomPos.x-1, roomPos.y+1, STRUCTURE_ROAD);
+                    roomInfo.room.createConstructionSite(roomPos.x+1, roomPos.y-1, STRUCTURE_ROAD);
                 }
             }
         }
